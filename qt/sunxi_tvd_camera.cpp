@@ -50,23 +50,15 @@ void SunxiTVDCamera::run()
 	if (initCapture() < 0)
 		return;
 
+	if (startCapture() < 0)
+		return;
+
 	while (1) {
-		while (!running) {
-			m_wait_mutex.lock();
-			m_wait.wait(&m_wait_mutex);
-			m_wait_mutex.unlock();
-		}
-
-		if (startCapture() < 0)
+		if (captureFrame() < 0)
 			break;
-
-		while (running)
-			if (captureFrame() < 0)
-				break;
-
-		stopCapture();
 	}
 
+	stopCapture();
 	closeCapture();
 }
 
@@ -341,6 +333,9 @@ void SunxiTVDCamera::closeCapture()
 
 void SunxiTVDCamera::updateTexture(const uchar *data, int width, int height)
 {
+	if (!running)
+		return;
+
 	m_image->yuv2rgb(data, width, height);
 	m_image->swapImage();
 	emit imageChanged();

@@ -1,13 +1,18 @@
 #include "camera_player.h"
 #include "yuv2rgb_material.h"
-#include <QSGNode>
 
 CameraPlayer::CameraPlayer(QQuickItem *parent)
-	: QQuickItem(parent), mTexture(NULL), mImage(360, 240), mPlay(false)
+	: QQuickItem(parent), mTexture(NULL), mImage(360, 240),
+	  mPlay(false), mBoundChanged(true), mTextureChanged(true)
 {
 	setFlag(ItemHasContents, true);
+	connect(this, &CameraPlayer::xChanged, this, &CameraPlayer::boundChanged);
+	connect(this, &CameraPlayer::yChanged, this, &CameraPlayer::boundChanged);
+	connect(this, &CameraPlayer::widthChanged, this, &CameraPlayer::boundChanged);
+	connect(this, &CameraPlayer::heightChanged, this, &CameraPlayer::boundChanged);
+
 	mCamera = new SunxiTVDCamera(&mImage, this);
-	connect(mCamera, &SunxiTVDCamera::imageChanged, this, &CameraPlayer::update);
+	connect(mCamera, &SunxiTVDCamera::imageChanged, this, &CameraPlayer::textureChanged);
 	mCamera->start();
 }
 
@@ -30,6 +35,18 @@ void CameraPlayer::setPlay(bool value)
 	emit playChanged(value);
 }
 
+void CameraPlayer::boundChanged()
+{
+	mBoundChanged = true;
+	update();
+}
+
+void CameraPlayer::textureChanged()
+{
+	mTextureChanged = true;
+	update();
+}
+
 QSGNode *CameraPlayer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
 	QSGGeometryNode *node;
@@ -49,7 +66,13 @@ QSGNode *CameraPlayer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 		material->setTexture(mTexture);
 		node->setMaterial(material);
 		node->setFlag(QSGNode::OwnsMaterial);
+	}
+	else {
+		node = static_cast<QSGGeometryNode *>(oldNode);
+		geometry = node->geometry();
+	}
 
+	if (mBoundChanged) {
 		QSGGeometry::TexturedPoint2D *vertices = geometry->vertexDataAsTexturedPoint2D();
 
 		vertices[0].x = x();
@@ -71,14 +94,17 @@ QSGNode *CameraPlayer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 		vertices[3].y = y();
 		vertices[3].tx = 1;
 		vertices[3].ty = 0;
-	}
-	else {
-		node = static_cast<QSGGeometryNode *>(oldNode);
-		geometry = node->geometry();
+
+		mBoundChanged = false;
+		node->markDirty(QSGNode::DirtyGeometry);
 	}
 
-	mTexture->updateFrame(mImage.getFrontImage());
-	node->markDirty(QSGNode::DirtyMaterial);
+	if (mTextureChanged) {
+		mTexture->updateFrame(mImage.getFrontImage());
+
+		mTextureChanged = false;
+		node->markDirty(QSGNode::DirtyMaterial);
+	}
 
 	return node;
 }

@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>yuv2rgb.vert</file>
+        <file>yuv2rgb.frag</file>
+    </qresource>
+</RCC>

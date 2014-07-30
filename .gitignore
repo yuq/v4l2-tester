@@ -1,2 +1,4 @@
 *~
 disp
+/build-*
+*.pro.user

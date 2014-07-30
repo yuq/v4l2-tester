@@ -3,7 +3,7 @@
 #include <QSGNode>
 
 CameraPlayer::CameraPlayer(QQuickItem *parent)
-	: QQuickItem(parent), mTexture(NULL), mImage(360, 240)
+	: QQuickItem(parent), mTexture(NULL), mImage(360, 240), mPlay(false)
 {
 	setFlag(ItemHasContents, true);
 	mCamera = new SunxiTVDCamera(&mImage, this);
@@ -14,6 +14,20 @@ CameraPlayer::CameraPlayer(QQuickItem *parent)
 CameraPlayer::~CameraPlayer()
 {
 	delete mCamera;
+}
+
+void CameraPlayer::setPlay(bool value)
+{
+	if (mPlay == value)
+		return;
+
+	if (value)
+		mCamera->startStream();
+	else
+		mCamera->stopStream();
+
+	mPlay = value;
+	emit playChanged(value);
 }
 
 QSGNode *CameraPlayer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)

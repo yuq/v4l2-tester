@@ -2,6 +2,7 @@
 #define SUNXI_TVD_CAMERA_H
 
 #include <QThread>
+#include <QWaitCondition>
 #include "imagestream.h"
 #include <linux/videodev2.h>
 
@@ -16,7 +17,9 @@ public:
 	void stopStream();
 
 private:
-	bool stopped;
+	bool running;
+	QMutex m_wait_mutex;
+	QWaitCondition m_wait;
 	ImageStream *m_image;
 
 	unsigned int frame_count;

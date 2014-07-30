@@ -35,7 +35,7 @@ extern "C" {
 
 
 SunxiTVDCamera::SunxiTVDCamera(ImageStream *ims, QObject *parent)
-	: QThread(parent), stopped(false), m_image(ims), frame_count(0), frame_devisor(3)
+	: QThread(parent), running(false), m_image(ims), frame_count(0), frame_devisor(1)
 {
 	videodev.fd = -1;
 }
@@ -47,29 +47,38 @@ SunxiTVDCamera::~SunxiTVDCamera()
 
 void SunxiTVDCamera::run()
 {
-	startStream();
+	if (initCapture() < 0)
+		return;
 
-	while (!stopped)
-		if (captureFrame() < 0)
+	while (1) {
+		while (!running) {
+			m_wait_mutex.lock();
+			m_wait.wait(&m_wait_mutex);
+			m_wait_mutex.unlock();
+		}
+
+		if (startCapture() < 0)
 			break;
 
-	stopStream();
+		while (running)
+			if (captureFrame() < 0)
+				break;
+
+		stopCapture();
+	}
+
+	closeCapture();
 }
 
 void SunxiTVDCamera::startStream()
 {
-	if (initCapture() < 0)
-		return;
-
-	//start capture
-	if (startCapture() < 0)
-		return;
-
+	running = true;
+	m_wait.wakeAll();
 }
 
 void SunxiTVDCamera::stopStream()
 {
-	stopCapture();
+	running = false;
 }
 
 int SunxiTVDCamera::initCapture()

@@ -7,7 +7,15 @@ Rectangle {
 	height: Math.min(Screen.height, 256)
 
 	CameraPlayer {
+		id: camera
 		width: 360
 		height: 240
+	}
+
+	Timer {
+		interval: 10000
+		repeat: true
+		running: true
+		onTriggered: camera.play = !camera.play
 	}
 }

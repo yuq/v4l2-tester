@@ -47,16 +47,16 @@ SunxiTVDCamera::~SunxiTVDCamera()
 
 void SunxiTVDCamera::run()
 {
-	start();
+	startStream();
 
 	while (!stopped)
 		if (captureFrame() < 0)
 			break;
 
-	stop();
+	stopStream();
 }
 
-void SunxiTVDCamera::start()
+void SunxiTVDCamera::startStream()
 {
 	if (initCapture() < 0)
 		return;
@@ -67,7 +67,7 @@ void SunxiTVDCamera::start()
 
 }
 
-void SunxiTVDCamera::stop()
+void SunxiTVDCamera::stopStream()
 {
 	stopCapture();
 }

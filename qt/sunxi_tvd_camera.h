@@ -12,8 +12,8 @@ public:
 	SunxiTVDCamera(ImageStream *ims, QObject *parent = 0);
 	~SunxiTVDCamera();
 
-	void start();
-	void stop();
+	void startStream();
+	void stopStream();
 
 private:
 	bool stopped;

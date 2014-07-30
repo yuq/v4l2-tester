@@ -10,10 +10,10 @@ public:
 	CameraTexture(int width, int height);
 	virtual ~CameraTexture();
 
-	virtual void bind() { mTexture->bind(); }
+	virtual void bind() { glBindTexture(GL_TEXTURE_2D, mTexture); }
 	virtual bool hasAlphaChannel() const { return false; }
 	virtual bool hasMipmaps() const { return false; }
-	virtual int textureId() const { return mTexture->textureId(); }
+	virtual int textureId() const { return mTexture; }
 	virtual QSize textureSize() const { return QSize(mWidth, mHeight); }
 
 	void updateFrame(void *data);
@@ -21,7 +21,7 @@ public:
 private:
 	int mWidth;
 	int mHeight;
-	QOpenGLTexture *mTexture;
+	GLuint mTexture;
 };
 
 #endif // CAMERA_TEXTURE_H

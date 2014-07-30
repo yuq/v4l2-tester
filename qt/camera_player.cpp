@@ -8,6 +8,7 @@ CameraPlayer::CameraPlayer(QQuickItem *parent)
 	setFlag(ItemHasContents, true);
 	mCamera = new SunxiTVDCamera(&mImage, this);
 	connect(mCamera, &SunxiTVDCamera::imageChanged, this, &CameraPlayer::update);
+	mCamera->start();
 }
 
 CameraPlayer::~CameraPlayer()

@@ -2,3 +2,6 @@
 disp
 /build-*
 *.pro.user
+qt/bin/*
+qt/build/*
+qt/Makefile

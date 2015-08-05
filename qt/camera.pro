@@ -11,21 +11,30 @@ CONFIG(release, debug|release) {
 }
 
 # Sources and Headers
-INCLUDEPATH += /home/yuq/projects/a10/linux-a10/include
-
 SOURCES += main.cpp \
-    sunxi_tvd_camera.cpp \
     camera_texture.cpp \
     yuv2rgb_material.cpp \
     camera_player.cpp \
-    imagestream.cpp
+    imagestream.cpp \
+    camera.cpp
 
 HEADERS += \
-    sunxi_tvd_camera.h \
     camera_texture.h \
     yuv2rgb_material.h \
     camera_player.h \
-    imagestream.h
+    imagestream.h \
+    camera.h
+
+sunxi {
+    DEFINES += "CONFIG_SUNXI_PLATFORM"
+    INCLUDEPATH += /home/yuq/workspace/projects/autorock/sunxi/linux/include
+    SOURCES += sunxi_tvd_camera.cpp
+    HEADERS += sunxi_tvd_camera.h
+} else {
+    DEFINES += "CONFIG_PC_PLATFORM"
+    SOURCES += pc_camera.cpp
+    HEADERS += pc_camera.h
+}
 
 # Qml Files
 OTHER_FILES += main.qml

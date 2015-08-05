@@ -1,4 +1,5 @@
 #include "sunxi_tvd_camera.h"
+#include "imagestream.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -34,43 +35,10 @@ extern "C" {
 #define CAPTURE_NAME		"Capture"
 
 
-SunxiTVDCamera::SunxiTVDCamera(ImageStream *ims, QObject *parent)
-	: QThread(parent), running(false), m_image(ims), frame_count(0), frame_devisor(1)
+SunxiTVDCamera::SunxiTVDCamera(QObject *parent)
+    : Camera(parent)
 {
-	videodev.fd = -1;
-}
-
-SunxiTVDCamera::~SunxiTVDCamera()
-{
-	closeCapture();
-}
-
-void SunxiTVDCamera::run()
-{
-	if (initCapture() < 0)
-		return;
-
-	if (startCapture() < 0)
-		return;
-
-	while (1) {
-		if (captureFrame() < 0)
-			break;
-	}
-
-	stopCapture();
-	closeCapture();
-}
-
-void SunxiTVDCamera::startStream()
-{
-	running = true;
-	m_wait.wakeAll();
-}
-
-void SunxiTVDCamera::stopStream()
-{
-	running = false;
+    m_image = new ImageStream(360, 240);
 }
 
 int SunxiTVDCamera::initCapture()
@@ -238,105 +206,7 @@ ERROR:
 	return -1;
 }
 
-int SunxiTVDCamera::startCapture()
+void SunxiTVDCamera::textureProcess(const uchar *data, int width, int height)
 {
-	int a, ret;
-
-	/* run section
-	 * STEP2:
-	 * Here display and capture channels are started for streaming. After
-	 * this capture device will start capture frames into enqueued
-	 * buffers and display device will start displaying buffers from
-	 * the qneueued buffers
-	 */
-
-	/* Start Streaming. on capture device */
-	a = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	ret = ioctl(videodev.fd, VIDIOC_STREAMON, &a);
-	if (ret < 0) {
-		qDebug() << "capture VIDIOC_STREAMON error fd=" << videodev.fd;
-		return ret;
-	}
-	qDebug() << CAPTURE_NAME << ": Stream on...";
-
-	/* Set the capture buffers for queuing and dqueueing operation */
-	videodev.capture_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	videodev.capture_buf.index = 0;
-	videodev.capture_buf.memory = V4L2_MEMORY_MMAP;
-
-	return 0;
-}
-
-int SunxiTVDCamera::captureFrame()
-{
-	int ret;
-	struct v4l2_buffer buf;
-
-	memset(&buf, 0, sizeof(buf));
-	buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	buf.memory = V4L2_MEMORY_USERPTR;
-
-	/* Dequeue capture buffer */
-	ret = ioctl(videodev.fd, VIDIOC_DQBUF, &buf);
-	if (ret < 0) {
-		qDebug() << "Cap VIDIOC_DQBUF";
-		return ret;
-	}
-
-	if (frame_count++ % frame_devisor == 0)
-		updateTexture((uchar *)videodev.buff_info[buf.index].start, videodev.cap_width, videodev.cap_height);
-
-	ret = ioctl(videodev.fd, VIDIOC_QBUF, &buf);
-	if (ret < 0) {
-		qDebug() << "Cap VIDIOC_QBUF";
-		return ret;
-	}
-
-	return 0;
-}
-
-int SunxiTVDCamera::stopCapture()
-{
-	int a, ret;
-
-	qDebug() << CAPTURE_NAME << ": Stream off!!\n";
-
-	a = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-	ret = ioctl(videodev.fd, VIDIOC_STREAMOFF, &a);
-	if (ret < 0) {
-		qDebug() << "VIDIOC_STREAMOFF";
-		return ret;
-	}
-
-	return 0;
-}
-
-void SunxiTVDCamera::closeCapture()
-{
-	int i;
-	struct buf_info *buff_info;
-
-	/* Un-map the buffers */
-	for (i = 0; i < CAPTURE_MAX_BUFFER; i++){
-		buff_info = &videodev.buff_info[i];
-		if (buff_info->start) {
-			munmap(buff_info->start, buff_info->length);
-			buff_info->start = NULL;
-		}
-	}
-
-	if (videodev.fd >= 0) {
-		close(videodev.fd);
-		videodev.fd = -1;
-	}
-}
-
-void SunxiTVDCamera::updateTexture(const uchar *data, int width, int height)
-{
-	if (!running)
-		return;
-
 	m_image->yuv2rgb(data, width, height);
-	m_image->swapImage();
-	emit imageChanged();
 }

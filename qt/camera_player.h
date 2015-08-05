@@ -1,10 +1,9 @@
 #ifndef CAMERA_PLAYER_H
 #define CAMERA_PLAYER_H
 
-#include <QSGNode>
 #include <QQuickItem>
-#include "camera_texture.h"
-#include "sunxi_tvd_camera.h"
+
+class Camera;
 
 class CameraPlayer : public QQuickItem
 {
@@ -27,9 +26,7 @@ private slots:
 	void boundChanged();
 
 private:
-	CameraTexture *mTexture;
-	SunxiTVDCamera *mCamera;
-	ImageStream mImage;
+    Camera *mCamera;
 	bool mPlay;
 	bool mBoundChanged;
 	bool mTextureChanged;

@@ -17,7 +17,9 @@ public:
     void unlockFrontImage() { mutex.unlock(); }
     int getWidth() { return m_width; }
     int getHeight() { return m_height; }
-	void yuv2rgb(const uchar *yuv, int yw, int yh);
+
+    void yuv2rgb(const uchar *yuv, int yw, int yh);
+    void yuyv2rgb(const uchar *yuv, int yw, int yh);
 
 private:
 	uchar *data[2];

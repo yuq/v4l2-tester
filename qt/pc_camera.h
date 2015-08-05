@@ -1,12 +1,12 @@
-#ifndef SUNXI_TVD_CAMERA_H
-#define SUNXI_TVD_CAMERA_H
+#ifndef PC_CAMERA_H
+#define PC_CAMERA_H
 
 #include "camera.h"
 
-class SunxiTVDCamera : public Camera
+class PCCamera : public Camera
 {
 public:
-    SunxiTVDCamera(QObject *parent = 0);
+    PCCamera(QObject *parent = 0);
 
 private:
     virtual int initCapture();
@@ -14,4 +14,3 @@ private:
 };
 
 #endif
-

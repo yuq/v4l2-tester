@@ -11,14 +11,24 @@ Rectangle {
 		id: camera
 		width: 360
 		height: 240
+        play: true
 	}
 
 	Timer {
 		interval: 10000
 		repeat: true
-		running: true
+        running: false
 		onTriggered: camera.play = !camera.play
 	}
 
-	//NumberAnimation { target: camera; property: "width"; from: 200; to: 400; duration: 1000; easing.type: Easing.InOutQuad; running: true; loops: Animation.Infinite }
+    NumberAnimation {
+        target: camera
+        property: "width"
+        from: 200
+        to: 400
+        duration: 1000
+        easing.type: Easing.InOutQuad
+        running: false
+        loops: Animation.Infinite
+    }
 }

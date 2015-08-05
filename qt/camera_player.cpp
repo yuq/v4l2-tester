@@ -1,9 +1,15 @@
 #include "camera_player.h"
-#include "yuv2rgb_material.h"
+#include <QSGNode>
+
+#ifdef CONFIG_SUNXI_PLATFORM
+#include "sunxi_tvd_camera.h"
+#endif
+#ifdef CONFIG_PC_PLATFORM
+#include "pc_camera.h"
+#endif
 
 CameraPlayer::CameraPlayer(QQuickItem *parent)
-	: QQuickItem(parent), mTexture(NULL), mImage(360, 240),
-	  mPlay(false), mBoundChanged(true), mTextureChanged(true)
+    : QQuickItem(parent), mPlay(false), mBoundChanged(true), mTextureChanged(true)
 {
 	setFlag(ItemHasContents, true);
 	connect(this, &CameraPlayer::xChanged, this, &CameraPlayer::boundChanged);
@@ -11,14 +17,19 @@ CameraPlayer::CameraPlayer(QQuickItem *parent)
 	connect(this, &CameraPlayer::widthChanged, this, &CameraPlayer::boundChanged);
 	connect(this, &CameraPlayer::heightChanged, this, &CameraPlayer::boundChanged);
 
-	mCamera = new SunxiTVDCamera(&mImage, this);
-	connect(mCamera, &SunxiTVDCamera::imageChanged, this, &CameraPlayer::textureChanged);
+#ifdef CONFIG_SUNXI_PLATFORM
+    mCamera = new SunxiTVDCamera(this);
+#endif
+#ifdef CONFIG_PC_PLATFORM
+    mCamera = new PCCamera(this);
+#endif
+    connect(mCamera, &Camera::imageChanged, this, &CameraPlayer::textureChanged);
 	mCamera->start();
 }
 
 CameraPlayer::~CameraPlayer()
 {
-	delete mCamera;
+
 }
 
 void CameraPlayer::setPlay(bool value)
@@ -50,58 +61,20 @@ void CameraPlayer::textureChanged()
 QSGNode *CameraPlayer::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
 	QSGGeometryNode *node;
-	QSGGeometry *geometry;
 
-	if (!mTexture)
-		mTexture = new CameraTexture(360, 240);
-
-	if (!oldNode) {
-		node = new QSGGeometryNode;
-		geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
-		geometry->setDrawingMode(GL_TRIANGLE_STRIP);
-		node->setGeometry(geometry);
-		node->setFlag(QSGNode::OwnsGeometry);
-
-		YUV2RGBMaterial *material = new YUV2RGBMaterial;
-		material->setTexture(mTexture);
-		node->setMaterial(material);
-		node->setFlag(QSGNode::OwnsMaterial);
-	}
-	else {
+    if (!oldNode)
+        node = mCamera->createNode();
+    else
 		node = static_cast<QSGGeometryNode *>(oldNode);
-		geometry = node->geometry();
-	}
 
 	if (mBoundChanged) {
-		QSGGeometry::TexturedPoint2D *vertices = geometry->vertexDataAsTexturedPoint2D();
-
-		vertices[0].x = x();
-		vertices[0].y = y() + height();
-		vertices[0].tx = 0;
-		vertices[0].ty = 1;
-
-		vertices[1].x = x();
-		vertices[1].y = y();
-		vertices[1].tx = 0;
-		vertices[1].ty = 0;
-
-		vertices[2].x = x() + width();
-		vertices[2].y = y() + height();
-		vertices[2].tx = 1;
-		vertices[2].ty = 1;
-
-		vertices[3].x = x() + width();
-		vertices[3].y = y();
-		vertices[3].tx = 1;
-		vertices[3].ty = 0;
-
+        mCamera->updateGeometry(x(), y(), width(), height());
 		mBoundChanged = false;
 		node->markDirty(QSGNode::DirtyGeometry);
 	}
 
 	if (mTextureChanged) {
-		mTexture->updateFrame(mImage.getFrontImage());
-
+        mCamera->updateMaterial();
 		mTextureChanged = false;
 		node->markDirty(QSGNode::DirtyMaterial);
 	}

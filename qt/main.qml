@@ -3,7 +3,7 @@ import QtQuick.Window 2.1
 import CameraPlayer 1.0
 
 Rectangle {
-	width: Math.min(Screen.width, 800)
+    width: Math.min(Screen.width, 400)
 	height: Math.min(Screen.height, 256)
 	color: "black"
 

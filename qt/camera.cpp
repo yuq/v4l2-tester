@@ -5,11 +5,15 @@
 #include "yuv2rgb_material.h"
 
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
 #include <QDebug>
 #include <QSGGeometryNode>
+
+char *Camera::CAPTURE_DEVICE = 0;
 
 Camera::Camera(QObject *parent)
     : QThread(parent), m_image(0), m_texture(0),
@@ -125,6 +129,85 @@ void Camera::updateTexture(const uchar *data, int width, int height)
 void Camera::updateMaterial()
 {
     m_texture->updateFrame(m_image->getFrontImage());
+}
+
+int Camera::initCapture()
+{
+    if (videodev.fd > 0)
+        return 0;
+
+    int err;
+    int fd = open(CAPTURE_DEVICE, O_RDWR);
+    if (fd < 0) {
+        qWarning() << "open /dev/video0 fail " << fd;
+        return fd;
+    }
+    videodev.fd = fd;
+
+    struct v4l2_capability cap;
+    if ((err = ioctl(fd, VIDIOC_QUERYCAP, &cap)) < 0) {
+        qWarning() << "VIDIOC_QUERYCAP error " << err;
+        goto err1;
+    }
+    qDebug() << "card =" << (char *)cap.card
+             << " driver =" << (char *)cap.driver
+             << " bus =" << (char *)cap.bus_info;
+
+    if (cap.capabilities & V4L2_CAP_VIDEO_CAPTURE)
+        qDebug() << "/dev/video0: Capable off capture";
+    else {
+        qWarning() << "/dev/video0: Not capable of capture";
+        goto err1;
+    }
+
+    if (cap.capabilities & V4L2_CAP_STREAMING)
+        qDebug() << "/dev/video0: Capable of streaming";
+    else {
+        qWarning() << "/dev/video0: Not capable of streaming";
+        goto err1;
+    }
+
+    if ((err = subInitCapture()) < 0)
+        goto err1;
+
+    struct v4l2_requestbuffers reqbuf;
+    reqbuf.count = 5;
+    reqbuf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    reqbuf.memory = V4L2_MEMORY_MMAP;
+    if ((err = ioctl(fd, VIDIOC_REQBUFS, &reqbuf)) < 0) {
+        qWarning() << "Cannot allocate memory";
+        goto err1;
+    }
+    videodev.numbuffer = reqbuf.count;
+    qDebug() << "buffer actually allocated" << reqbuf.count;
+
+    uint i;
+    struct v4l2_buffer buf;
+    memset(&buf, 0, sizeof(buf));
+    for (i = 0; i < reqbuf.count; i++) {
+        buf.type = reqbuf.type;
+        buf.index = i;
+        buf.memory = reqbuf.memory;
+        Q_ASSERT(ioctl(fd, VIDIOC_QUERYBUF, &buf) == 0);
+
+        videodev.buff_info[i].length = buf.length;
+        videodev.buff_info[i].index = i;
+        videodev.buff_info[i].start =
+                (uchar *)mmap(NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, buf.m.offset);
+
+        Q_ASSERT(videodev.buff_info[i].start != MAP_FAILED);
+
+        memset((void *) videodev.buff_info[i].start, 0x80,
+               videodev.buff_info[i].length);
+
+        Q_ASSERT(ioctl(fd, VIDIOC_QBUF, &buf) == 0);
+    }
+
+    return 0;
+
+err1:
+    close(fd);
+    return err;
 }
 
 int Camera::startCapture()

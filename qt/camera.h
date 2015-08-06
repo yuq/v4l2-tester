@@ -30,11 +30,9 @@ signals:
 
 protected:
     ImageStream *m_image;
-    CameraTexture *m_texture;
-    unsigned int frame_count;
-    int frame_devisor;
 
     static const int CAPTURE_MAX_BUFFER = 5;
+    static char *CAPTURE_DEVICE;
 
     struct buf_info{
         int index;
@@ -45,31 +43,31 @@ protected:
     struct video_dev
     {
         int fd;
-        unsigned int offset[2];
         int cap_width, cap_height;
-
-        struct v4l2_buffer capture_buf;
         struct buf_info buff_info[CAPTURE_MAX_BUFFER];
         int numbuffer;
     } videodev;
 
-    void closeCapture();
-    void updateTexture(const uchar *data, int width, int height);
-
 private:
+    CameraTexture *m_texture;
+    unsigned int frame_count;
+    int frame_devisor;
     bool m_running;
     QMutex m_wait_mutex;
     QWaitCondition m_wait;
     QSGGeometryNode *m_node;
 
-    virtual int initCapture() { return 0; }
+    int initCapture();
     int startCapture();
     int captureFrame();
     int stopCapture();
+    void closeCapture();
 
     void run();
 
+    void updateTexture(const uchar *data, int width, int height);
     virtual void textureProcess(const uchar *data, int width, int height);
+    virtual int subInitCapture() { return 0; }
 };
 
 #endif // CAMERA_H

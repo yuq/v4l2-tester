@@ -9,7 +9,7 @@ public:
     PCCamera(QObject *parent = 0);
 
 private:
-    virtual int initCapture();
+    virtual int subInitCapture();
     virtual void textureProcess(const uchar *data, int width, int height);
 };
 

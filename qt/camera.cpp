@@ -131,6 +131,21 @@ void Camera::updateMaterial()
     m_texture->updateFrame(m_image->getFrontImage());
 }
 
+void Camera::vidioc_enuminput(int fd)
+{
+    int err;
+    struct v4l2_input input;
+    memset(&input, 0, sizeof(input));
+    input.index = 0;
+    while ((err = ioctl(fd, VIDIOC_ENUMINPUT, &input)) == 0) {
+        qDebug() << "input name =" << (char *)input.name
+                 << " type =" << input.type
+                 << " status =" << input.status
+                 << " std =" << input.std;
+        input.index++;
+    }
+}
+
 int Camera::initCapture()
 {
     if (videodev.fd > 0)

@@ -48,6 +48,8 @@ protected:
         int numbuffer;
     } videodev;
 
+    void vidioc_enuminput(int fd);
+
 private:
     CameraTexture *m_texture;
     unsigned int frame_count;

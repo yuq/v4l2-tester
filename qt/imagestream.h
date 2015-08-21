@@ -20,6 +20,7 @@ public:
 
     void yuv2rgb(const uchar *yuv, int yw, int yh);
     void yuyv2rgb(const uchar *yuv, int yw, int yh);
+    void uyvy2rgb(const uchar *yuv, int yw, int yh);
 
 private:
 	uchar *data[2];

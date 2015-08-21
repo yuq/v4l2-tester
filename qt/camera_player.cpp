@@ -7,6 +7,9 @@
 #ifdef CONFIG_PC_PLATFORM
 #include "pc_camera.h"
 #endif
+#ifdef CONFIG_IMX_PLATFORM
+#include "imx_tvd_camera.h"
+#endif
 
 CameraPlayer::CameraPlayer(QQuickItem *parent)
     : QQuickItem(parent), mPlay(false), mBoundChanged(true), mTextureChanged(true)
@@ -22,6 +25,9 @@ CameraPlayer::CameraPlayer(QQuickItem *parent)
 #endif
 #ifdef CONFIG_PC_PLATFORM
     mCamera = new PCCamera(this);
+#endif
+#ifdef CONFIG_IMX_PLATFORM
+    mCamera = new IMXTVDCamera(this);
 #endif
     connect(mCamera, &Camera::imageChanged, this, &CameraPlayer::textureChanged);
 	mCamera->start();

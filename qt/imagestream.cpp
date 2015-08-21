@@ -39,6 +39,17 @@ void ImageStream::yuyv2rgb(const uchar *yuv, int yw, int yh)
     }
 }
 
+void ImageStream::uyvy2rgb(const uchar *yuv, int yw, int yh)
+{
+    uchar *rgb = getBackImage();
+
+    for (int i = 0; i < yw * yh; i++) {
+        rgb[i * 3 + 0] = yuv[i * 2 + 1];
+        rgb[i * 3 + 1] = yuv[i * 2 + (i & 1 ? -2 : 0)];
+        rgb[i * 3 + 2] = yuv[i * 2 + (i & 1 ? 0 : 2)];
+    }
+}
+
 void ImageStream::swapImage()
 {
     mutex.lock();

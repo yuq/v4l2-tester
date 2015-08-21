@@ -57,16 +57,7 @@ int PCCamera::subInitCapture()
         return -1;
     }
 
-    struct v4l2_input input;
-    memset(&input, 0, sizeof(input));
-    input.index = 0;
-    while ((err = ioctl(fd, VIDIOC_ENUMINPUT, &input)) == 0) {
-        qDebug() << "input name =" << (char *)input.name
-                 << " type =" << input.type
-                 << " status =" << input.status
-                 << " std =" << input.std;
-        input.index++;
-    }
+    vidioc_enuminput(fd);
 
     int index;
     if ((err = ioctl(fd, VIDIOC_G_INPUT, &index)) < 0)

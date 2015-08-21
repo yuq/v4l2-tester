@@ -30,6 +30,10 @@ sunxi {
     INCLUDEPATH += /home/yuq/workspace/projects/autorock/sunxi/linux/include
     SOURCES += sunxi_tvd_camera.cpp
     HEADERS += sunxi_tvd_camera.h
+} else:imx {
+    DEFINES += "CONFIG_IMX_PLATFORM"
+    SOURCES += imx_tvd_camera.cpp
+    HEADERS += imx_tvd_camera.h
 } else {
     DEFINES += "CONFIG_PC_PLATFORM"
     SOURCES += pc_camera.cpp

@@ -203,7 +203,8 @@ int Camera::initCapture()
         buf.type = reqbuf.type;
         buf.index = i;
         buf.memory = reqbuf.memory;
-        Q_ASSERT(ioctl(fd, VIDIOC_QUERYBUF, &buf) == 0);
+        err = ioctl(fd, VIDIOC_QUERYBUF, &buf);
+        Q_ASSERT(err == 0);
 
         videodev.buff_info[i].length = buf.length;
         videodev.buff_info[i].index = i;
@@ -215,7 +216,8 @@ int Camera::initCapture()
         memset((void *) videodev.buff_info[i].start, 0x80,
                videodev.buff_info[i].length);
 
-        Q_ASSERT(ioctl(fd, VIDIOC_QBUF, &buf) == 0);
+        err = ioctl(fd, VIDIOC_QBUF, &buf);
+        Q_ASSERT(err == 0);
     }
 
     return 0;

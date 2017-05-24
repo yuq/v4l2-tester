@@ -58,25 +58,28 @@ QSGGeometryNode *Camera::createNode()
 
 void Camera::updateGeometry(qreal x, qreal y, qreal width, qreal height)
 {
-    QSGGeometry::TexturedPoint2D *vertices = m_node->geometry()->vertexDataAsTexturedPoint2D();
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+    QSGGeometry::TexturedPoint2D *vertices
+            = m_node->geometry()->vertexDataAsTexturedPoint2D();
 
-    vertices[0].x = x;
-    vertices[0].y = y + height;
+    vertices[0].x = 0;
+    vertices[0].y = 0 + height;
     vertices[0].tx = 0;
     vertices[0].ty = 1;
 
-    vertices[1].x = x;
-    vertices[1].y = y;
+    vertices[1].x = 0;
+    vertices[1].y = 0;
     vertices[1].tx = 0;
     vertices[1].ty = 0;
 
-    vertices[2].x = x + width;
-    vertices[2].y = y + height;
+    vertices[2].x = 0 + width;
+    vertices[2].y = 0 + height;
     vertices[2].tx = 1;
     vertices[2].ty = 1;
 
-    vertices[3].x = x + width;
-    vertices[3].y = y;
+    vertices[3].x = 0 + width;
+    vertices[3].y = 0;
     vertices[3].tx = 1;
     vertices[3].ty = 0;
 }
